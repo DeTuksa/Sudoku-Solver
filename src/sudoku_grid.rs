@@ -28,16 +28,11 @@ impl SudokuGrid {
         for row in &self.cells {
             // Iterate over each cell in the current row
             for &cell in row {
-                let cell_str = if cell == 0 { ".".to_string()} else {cell.to_string()};
                 // Print the value of the cell, using "." for empty cells
-                print!("{} ", cell_str);
+                print!("{} ", if cell == 0 {"."} else {&cell.to_string() });
             }
             // Move to the next line after printing each row
             println!();
         }
     }
-}
-
-fn main() {
-    println!("Hello, world!");
 }
