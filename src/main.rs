@@ -1,3 +1,6 @@
+use  std::fs::File;
+use std::io::{BufRead, BufReader, Error, ErrorKind};
+
 // struct to represent a Sudoku puzzle
 struct SudokuGrid {
     cells: [[u8; 9]; 9] // 9x9 grid of cells, each containing a number. Is 0 if empty
@@ -36,8 +39,47 @@ impl SudokuGrid {
             println!();
         }
     }
+
+    // Method to read a Sudoku puzzle from a text file
+    fn read_from_file(filename: &str) -> Result<Self, Error> {
+        // Open the file in read mode
+        let file = File::open(filename)?;
+        let reader = BufReader::new(file);
+
+        // Create a new empty SudokuGrid
+        let mut sudoku_grid = SudokuGrid::new();
+
+        for (row, line) in reader.lines().enumerate() {
+            let line = line?;
+            // Split the line into individual characters
+            let chars: Vec<char> = line.chars().collect();
+            // Iterate over each character to set the cell values
+            for (col, ch) in chars.iter().enumerate() {
+                if let Some(num) = ch.to_digit(10) {
+                    sudoku_grid.set_cell(row, col, num as u8);
+                } else if *ch != '.' {
+                    return  Err(Error::new(ErrorKind::InvalidData, "Invalid character in input"));
+                }
+            }
+        }
+
+        Ok(sudoku_grid)
+    }
 }
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> Result<(), Error> {
+    let filename = "sudoku.txt";
+
+    let sudoku_grid = match SudokuGrid::read_from_file(filename) {
+        Ok(grid) => grid,
+        Err(e) => {
+            eprintln!("Error reading sudoku puzzle: {}", e);
+            return Err(Error::new(ErrorKind::Other, "Failed to read Sudoku puzzle"));
+        }
+    };
+
+    println!("Sudou Puzzle::::");
+    sudoku_grid.display();
+
+    Ok(())
 }
