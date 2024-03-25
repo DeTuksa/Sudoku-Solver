@@ -1,8 +1,16 @@
+use std::env;
 use std::io::{Error, ErrorKind};
 use sudoku_solver::{SudokuGrid, Solver};
 
 fn main() -> Result<(), Error> {
-    let filename = "sudoku.txt";
+
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() != 2 {
+        eprintln!("Usage: {} <sudoku_file", args[0]);
+        return Ok(());
+    }
+    let filename = &args[1];
 
     let mut sudoku_grid = match SudokuGrid::read_from_file(filename) {
         Ok(grid) => grid,
