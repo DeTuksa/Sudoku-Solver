@@ -65,12 +65,86 @@ impl SudokuGrid {
 
         Ok(sudoku_grid)
     }
+
+    // Helper method to find the next empty cell
+    fn find_empty_cell(&self) -> Option<(usize, usize)> {
+        for row in 0..9 {
+            for col in 0..9 {
+                if self.get_cell(row, col) == 0 {
+                    return Some((row, col));
+                }
+            }
+        }
+        None // Return None if no empty cell is found
+    }
+
+    // Helper method to check if the number is used in the same column
+    fn used_in_col(&self, col: usize, num: u8) -> bool {
+        for row in 0..9 {
+            if self.get_cell(row, col) == num {
+                return true;
+            }
+        }
+        false
+    }
+
+    // Helper method to check if the number is used in the 3x3 subgrid
+    fn used_in_subgrid(&self, start_row: usize, start_col: usize, num: u8) -> bool {
+        for row in 0..3 {
+            for col in 0..3 {
+                if self.get_cell(row + start_row, col + start_col) == num {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    // Helper method to check if a move is valid
+    fn is_valid_move(&self, row: usize, col: usize, num: u8) -> bool {
+        // Check if the number is not present in the same row, column, or 3x3 subgrid
+        !self.used_in_row(row, num) && !self.used_in_col(col, num) && !self.used_in_subgrid(row - row % 3, col - col % 3, num)
+    }
+
+    // Helper method to check if the number is used in the same row
+    fn used_in_row(&self, row: usize, num: u8) -> bool {
+        for col in 0..9 {
+            if self.get_cell(row, col) == num {
+                return true;
+            }
+        }
+        false
+    }
+
+    // Method to solve the Sudoku puzzle using backtracing
+    fn solve(&mut self) -> bool {
+        // Find the next empty cell (if any)
+        if let Some((row, col)) = self.find_empty_cell() {
+            // Try filling the cell with each possible digit
+            for num in 1..=9  {
+                // Check if the current digit is valid for the cell
+                if self.is_valid_move(row, col, num as u8) {
+                    // If valid, set the cell value and recursively solve
+                    self.set_cell(row, col, num as u8);
+                    // Recursively solve the puzzle
+                    if self.solve() {
+                        return  true; // Solution found
+                    }
+                    // If the recursive call returns false, backtrack and try the next digit
+                    self.set_cell(row, col, 0); // Reset the cell
+                }
+            }
+            // If no valid digit leads to a solution, backtrack
+            return  false;
+        }
+        true // If there are no empty cells left, the puzzle is solved
+    }
 }
 
 fn main() -> Result<(), Error> {
     let filename = "sudoku.txt";
 
-    let sudoku_grid = match SudokuGrid::read_from_file(filename) {
+    let mut sudoku_grid = match SudokuGrid::read_from_file(filename) {
         Ok(grid) => grid,
         Err(e) => {
             eprintln!("Error reading sudoku puzzle: {}", e);
@@ -80,6 +154,13 @@ fn main() -> Result<(), Error> {
 
     println!("Sudou Puzzle::::");
     sudoku_grid.display();
+
+    if sudoku_grid.solve() {
+        println!("\n<<<<<<<<<<<<<<<Solved Sudoku Puzzle>>>>>>>>>>>>>>>>>>");
+        sudoku_grid.display();
+    } else {
+        println!("\nNo solution found for this Sudoku puzzle");
+    }
 
     Ok(())
 }
